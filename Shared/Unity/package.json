@@ -1,6 +1,7 @@
 ﻿{
   "name": "com.wechat.shared",
   "version": "1.0.0-release",
+  "author": "Molth Nevin",
   "displayname": "wechat shared",
   "description": "wechat shared"
 }

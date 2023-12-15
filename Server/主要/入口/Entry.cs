@@ -1,15 +1,27 @@
-﻿using CommandLine;
+//------------------------------------------------------------
+// 偷我的代码就会被拖进黑暗空间
+// Copyright © 2023 Molth Nevin. All rights reserved.
+//------------------------------------------------------------
+
+using CommandLine;
+using Newtonsoft.Json;
 
 #pragma warning disable CS8600
+#pragma warning disable CS8602
 #pragma warning disable CS8618
 
 namespace Erinn
 {
-    public class Entry
+    /// <summary>
+    ///     程序入口
+    /// </summary>
+    public static class Entry
     {
+        /// <summary>
+        ///     入口方法
+        /// </summary>
         public static async Task Main()
         {
-            ClearThirdParty();
             ConnectThirdParty();
             var server = new MasterServer();
             server.Init(NetworkProtocolType.Kcp);
@@ -24,10 +36,8 @@ namespace Erinn
         /// </summary>
         private static void ConnectThirdParty()
         {
-            CommandLineOptions options = null;
-            Parser.Default.ParseArguments<CommandLineOptions>(Environment.GetCommandLineArgs()).WithParsed(commandLineOptions => options = commandLineOptions);
-            if (options == null)
-                return;
+            var jsonData = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, "CommandLineOptions.txt"));
+            var options = JsonConvert.DeserializeObject<CommandLineOptions>(jsonData);
             var mySqlSetting = options.MySqlSetting.Split(',');
             MySqlService.Connect(mySqlSetting[0], mySqlSetting[1], mySqlSetting[2], mySqlSetting[3], mySqlSetting[4]);
             var mailSetting = options.MailSetting.Split(',');
@@ -37,19 +47,9 @@ namespace Erinn
         }
 
         /// <summary>
-        ///     清理第三方
-        /// </summary>
-        private static void ClearThirdParty()
-        {
-            MySqlService.Clear();
-            MailService.Clear();
-            BaiduService.Clear();
-        }
-
-        /// <summary>
         ///     命令行选项
         /// </summary>
-        public sealed class CommandLineOptions
+        public sealed record CommandLineOptions
         {
             /// <summary>
             ///     数据库

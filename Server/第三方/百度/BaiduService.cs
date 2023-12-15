@@ -1,26 +1,26 @@
-﻿using Newtonsoft.Json;
+//------------------------------------------------------------
+// 偷我的代码就会被拖进黑暗空间
+// Copyright © 2023 Molth Nevin. All rights reserved.
+//------------------------------------------------------------
+
+using Newtonsoft.Json;
 
 namespace Erinn
 {
     /// <summary>
     ///     百度服务
     /// </summary>
-    public static class BaiduService
+    public static partial class BaiduService
     {
+        /// <summary>
+        ///     设置
+        /// </summary>
+        private static BaiduServiceSetting _colaSetting;
+
         /// <summary>
         ///     HttpClient池
         /// </summary>
         private static readonly Stack<HttpClient> HttpClientPool = new();
-
-        /// <summary>
-        ///     设置
-        /// </summary>
-        public static BaiduServiceSetting ColaSetting { get; private set; }
-
-        /// <summary>
-        ///     连接
-        /// </summary>
-        public static void Connect(BaiduServiceSetting setting) => ColaSetting = setting;
 
         /// <summary>
         ///     连接
@@ -28,7 +28,7 @@ namespace Erinn
         /// <param name="colaKey">密匙</param>
         /// <param name="uid">账号</param>
         /// <param name="appKey">密码</param>
-        public static void Connect(string colaKey, string uid, string appKey) => ColaSetting = new BaiduServiceSetting(colaKey, uid, appKey);
+        public static void Connect(string colaKey, string uid, string appKey) => _colaSetting = new BaiduServiceSetting(colaKey, uid, appKey);
 
         /// <summary>
         ///     获取HttpClient
@@ -48,16 +48,6 @@ namespace Erinn
         private static void Push(HttpClient httpClient) => HttpClientPool.Push(httpClient);
 
         /// <summary>
-        ///     清空
-        /// </summary>
-        public static void Clear()
-        {
-            foreach (var httpClient in HttpClientPool)
-                httpClient.Dispose();
-            HttpClientPool.Clear();
-        }
-
-        /// <summary>
         ///     检测敏感词
         /// </summary>
         /// <param name="wordStr">文本</param>
@@ -69,7 +59,7 @@ namespace Erinn
             var httpClient = Pop();
             using var requestContent = new FormUrlEncodedContent(new[]
             {
-                new KeyValuePair<string, string>("ColaKey", ColaSetting.ColaKey),
+                new KeyValuePair<string, string>("ColaKey", _colaSetting.ColaKey),
                 new KeyValuePair<string, string>("wordStr", wordStr),
                 new KeyValuePair<string, string>("isStrict", isStrict.ToString())
             });
@@ -100,7 +90,7 @@ namespace Erinn
             using var requestContent = new FormUrlEncodedContent(new[]
             {
                 new KeyValuePair<string, string>("text", text),
-                new KeyValuePair<string, string>("ColaKey", ColaSetting.ColaKey),
+                new KeyValuePair<string, string>("ColaKey", _colaSetting.ColaKey),
                 new KeyValuePair<string, string>("fromlang", fromLang),
                 new KeyValuePair<string, string>("tolang", toLang)
             });
@@ -130,8 +120,8 @@ namespace Erinn
             using var requestContent = new FormUrlEncodedContent(new[]
             {
                 new KeyValuePair<string, string>("ques", ques),
-                new KeyValuePair<string, string>("appKey", ColaSetting.AppKey),
-                new KeyValuePair<string, string>("uid", ColaSetting.Uid),
+                new KeyValuePair<string, string>("appKey", _colaSetting.AppKey),
+                new KeyValuePair<string, string>("uid", _colaSetting.Uid),
                 new KeyValuePair<string, string>("isLongChat", isLongChat.ToString())
             });
             using var response = await httpClient.PostAsync(apiUrl, requestContent);
@@ -145,6 +135,94 @@ namespace Erinn
 
             Push(httpClient);
             return new ChatResult(false, default);
+        }
+
+        /// <summary>
+        ///     选项
+        /// </summary>
+        public static class Options
+        {
+            /// <summary>
+            ///     严格检测
+            /// </summary>
+            public static class IsStrict
+            {
+                /// <summary>
+                ///     关闭
+                /// </summary>
+                public const int Close = 0;
+
+                /// <summary>
+                ///     开启
+                /// </summary>
+                public const int Open = 1;
+            }
+
+            /// <summary>
+            ///     语言
+            /// </summary>
+            public static class Lang
+            {
+                /// <summary>
+                ///     中文
+                /// </summary>
+                public const string Chinese = "ZH";
+
+                /// <summary>
+                ///     英文
+                /// </summary>
+                public const string English = "EN";
+            }
+
+            /// <summary>
+            ///     长对话
+            /// </summary>
+            public static class LongChat
+            {
+                /// <summary>
+                ///     关闭
+                /// </summary>
+                public const int Close = 0;
+
+                /// <summary>
+                ///     开启
+                /// </summary>
+                public const int Open = 1;
+            }
+        }
+
+        /// <summary>
+        ///     设置
+        /// </summary>
+        private readonly struct BaiduServiceSetting
+        {
+            /// <summary>
+            ///     密匙
+            /// </summary>
+            public readonly string ColaKey;
+
+            /// <summary>
+            ///     账号
+            /// </summary>
+            public readonly string Uid;
+
+            /// <summary>
+            ///     密码
+            /// </summary>
+            public readonly string AppKey;
+
+            /// <summary>
+            ///     连接
+            /// </summary>
+            /// <param name="colaKey">密匙</param>
+            /// <param name="uid">账号</param>
+            /// <param name="appKey">密码</param>
+            public BaiduServiceSetting(string colaKey, string uid, string appKey)
+            {
+                ColaKey = colaKey;
+                Uid = uid;
+                AppKey = appKey;
+            }
         }
     }
 }
